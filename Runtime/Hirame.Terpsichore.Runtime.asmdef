@@ -1,0 +1,16 @@
+{
+    "name": "Hirame.Terpsichore.Runtime",
+    "references": [
+        "GUID:83b2b053c31a10140a0bf3ba6ffd6622",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

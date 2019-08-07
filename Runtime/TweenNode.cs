@@ -12,14 +12,14 @@ namespace Hirame.Terpsichore
         [FieldOffset (0)] public TweenType Type;
 
         // Base serialized
-        [FieldOffset (sizeof (int))] public float4 FromXYZW;
-        [FieldOffset (sizeof (int) * 5)] public float4 ToXYZW;
+        [FieldOffset (sizeof (int))] public Vector4 FromXYZW;
+        [FieldOffset (sizeof (int) * 5)] public Vector4 ToXYZW;
 
         // FROM
         [System.NonSerialized] 
         [FieldOffset (sizeof (int))] public float2 FromXY;
         [System.NonSerialized] 
-        [FieldOffset (sizeof (int))] public float2 FromZW;
+        [FieldOffset (sizeof (int) * 2)] public float2 FromZW;
         
         [System.NonSerialized] 
         [FieldOffset (sizeof (int))] public float3 FromXYZ;
@@ -40,10 +40,21 @@ namespace Hirame.Terpsichore
         [MinMax (0, 1), FieldOffset (sizeof (int) * 9)]
         public FloatMinMax Range;
 
+        [FieldOffset (sizeof (int) * 11)]
+        public bool useCurve;
+        
+        // For some reason 11 crashes?
+        [FieldOffset (sizeof (int) * 12)]
+        public TweenCurve curve;
+        
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
         public void ApplyAsPosition (float t, ref float3 position)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
+            
+            if (useCurve)
+                t = curve.Evaluate (t);
+            
             position += math.lerp (FromXYZ, ToXYZ, t);
         }
         
@@ -51,6 +62,10 @@ namespace Hirame.Terpsichore
         public void ApplyAsRotation (float t, ref float3 rotation)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
+             
+            if (useCurve)
+                t = curve.Evaluate (t);
+
             rotation += math.lerp (FromXYZ, ToXYZ, t);
         }
 
@@ -58,6 +73,10 @@ namespace Hirame.Terpsichore
         public void ApplyAsScale (float t, ref float3 scale)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
+             
+            if (useCurve)
+                t = curve.Evaluate (t);
+
             scale = math.lerp (FromXYZ, ToXYZ, t);
         }
 
@@ -65,6 +84,10 @@ namespace Hirame.Terpsichore
         public void ApplyAsColor (float t, ref Color color)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
+             
+            if (useCurve)
+                t = curve.Evaluate (t);
+
             color = Color.Lerp (FromRGBA, ToRGBA, t);
         }
 
@@ -72,6 +95,10 @@ namespace Hirame.Terpsichore
         public void ApplyAsAnchors (float t, ref float2 min, ref float2 max)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
+             
+            if (useCurve)
+                t = curve.Evaluate (t);
+
             min = math.lerp (FromXY, ToXY, t);
             max = math.lerp (FromZW, ToZW, t);
         }

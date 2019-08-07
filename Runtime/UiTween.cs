@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Runtime.InteropServices;
+using System.Collections;
+using System.Collections.Generic;
 using Hirame.Pantheon;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 
 namespace Hirame.Terpsichore
 {
-    public sealed class TweenRuntime : MonoBehaviour
-    {
-        [SerializeField] private float length = 1f;
+    public class UiTween : MonoBehaviour
+{
+    [SerializeField] private float length = 1f;
         
         [MaskField]
         [SerializeField] private TweenPlayFlags playPlayFlags = TweenPlayFlags.PlayOnEnable;
@@ -19,13 +18,9 @@ namespace Hirame.Terpsichore
         [SerializeField] private TweenNode[] tweens;
 
         [SerializeField] private UnityEvent tweenFinished;
-
-
-        private RectTransform rectTransform;
-        private new Transform transform;
         
-        private Image image;
-
+        private Transform attachedTransform;
+        
         private int animationDirection = 1;
         private float time;
 
@@ -42,15 +37,9 @@ namespace Hirame.Terpsichore
 
         private void OnEnable ()
         {
-            if (rectTransform == false)
-                rectTransform = GetComponent<RectTransform> ();
+            if (attachedTransform == false)
+                attachedTransform = GetComponent<Transform> ();
             
-            if (transform == false)
-                transform = GetComponent<Transform> ();
-            
-            if (image == false)
-                image = GetComponent<Image> ();
-
             if (playPlayFlags.FlagPlayOnEnable ())
                 Play ();
             else
@@ -64,8 +53,8 @@ namespace Hirame.Terpsichore
             var scale = new float3 (1, 1, 1);
             var color = Color.white;
 
-            var anchorMin = float2.zero;
-            var anchorMax = float2.zero;
+            //var anchorMin = float2.zero;
+            //var anchorMax = float2.zero;
 
             time += Time.deltaTime / length * animationDirection;
             time = math.clamp (time, 0, 1);
@@ -88,35 +77,22 @@ namespace Hirame.Terpsichore
                     case TweenType.Color:
                         tween.ApplyAsColor (time, ref color);
                         break;
-                    case TweenType.Anchors:
-                        tween.ApplyAsAnchors (time, ref anchorMin, ref anchorMax);
-                        break;
+                    //case TweenType.Anchors:
+                    //    tween.ApplyAsAnchors (time, ref anchorMin, ref anchorMax);
+                     //   break;
                     default:
                         throw new ArgumentOutOfRangeException ();
                 }
             }
-
-            if (rectTransform)
-            {
-                rectTransform.anchorMin = anchorMin;
-                rectTransform.anchorMax = anchorMax;
             
-                rectTransform.anchoredPosition3D = position;
-                rectTransform.localRotation = Quaternion.Euler (rotation);
-                rectTransform.localScale = scale;
-            }
-            else
-            {
-                transform.localPosition = position;
-                transform.localRotation = Quaternion.Euler (rotation);
-                transform.localScale = scale;
-            }
+            attachedTransform.localPosition = position;
+            attachedTransform.localRotation = Quaternion.Euler (rotation);
+            attachedTransform.localScale = scale;
 
-
-            if (image)
-            {
-                image.color = color;
-            }
+            //if (image)
+            //{
+            //    image.color = color;
+            //}
 
             if (time > 0 && time < 1)
                 return;
@@ -145,5 +121,6 @@ namespace Hirame.Terpsichore
 
             return true;
         }
-    }
+}
+
 }

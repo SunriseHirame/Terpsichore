@@ -2,13 +2,23 @@
 
 namespace Hirame.Terpsichore
 {
+    [System.Flags]
     public enum TweenType
     {
-        Position,
-        Rotation,
-        Scale,
-        Color,
-        Anchors
+        Position = 1,
+        Rotation = 2,
+        Scale = 4,
+        Color = 16
+    }
+
+    [System.Flags]
+    public enum UiTweenType
+    {
+        Position = 1,
+        Rotation = 2,
+        Scale = 4,
+        Color = 16,
+        Anchors = 32
     }
 
     [System.Flags]

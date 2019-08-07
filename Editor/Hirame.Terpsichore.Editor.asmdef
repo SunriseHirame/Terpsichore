@@ -1,0 +1,17 @@
+{
+    "name": "Hirame.Terpsichore.Editor",
+    "references": [
+        "GUID:088a2b229753f544fbd0d4440576566e"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

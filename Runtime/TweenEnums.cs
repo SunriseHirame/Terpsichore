@@ -8,7 +8,7 @@ namespace Hirame.Terpsichore
         Position = 1,
         Rotation = 2,
         Scale = 4,
-        Color = 16
+        Color = 8
     }
 
     [System.Flags]
@@ -17,8 +17,8 @@ namespace Hirame.Terpsichore
         Position = 1,
         Rotation = 2,
         Scale = 4,
-        Color = 16,
-        Anchors = 32
+        Color = 8,
+        Anchors = 16
     }
 
     [System.Flags]

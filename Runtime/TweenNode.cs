@@ -48,66 +48,67 @@ namespace Hirame.Terpsichore
         public TweenCurve curve;
         
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-        public void ApplyAsPosition (float t, ref float3 position)
+        public void ApplyAsPosition (float t, float ct, ref float3 position)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
-            
-            if (useCurve)
-                t = curve.Evaluate (t);
-            
+            t = SampleCurve (t, ct);
+
             position += math.lerp (FromXYZ, ToXYZ, t);
         }
         
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-        public void ApplyAsRotation (float t, ref float3 rotation)
+        public void ApplyAsRotation (float t, float ct, ref float3 rotation)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
-             
-            if (useCurve)
-                t = curve.Evaluate (t);
+            t = SampleCurve (t, ct);
 
             rotation += math.lerp (FromXYZ, ToXYZ, t);
         }
 
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-        public void ApplyAsScale (float t, ref float3 scale)
+        public void ApplyAsScale (float t, float ct, ref float3 scale)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
-             
-            if (useCurve)
-                t = curve.Evaluate (t);
+            t = SampleCurve (t, ct);
 
             scale = math.lerp (FromXYZ, ToXYZ, t);
         }
 
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-        public void ApplyAsColor (float t, ref Color color)
+        public void ApplyAsColor (float t, float ct, ref Color color)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
-             
-            if (useCurve)
-                t = curve.Evaluate (t);
-
+            t = SampleCurve (t, ct);
+            
             color = Color.Lerp (FromRGBA, ToRGBA, t);
         }
 
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
-        public void ApplyAsAnchors (float t, ref float2 min, ref float2 max)
+        public void ApplyAsAnchors (float t, float ct, ref float2 min, ref float2 max)
         {
             t = RemapClamped (t, Range.Min, Range.Max, 0, 1);
-             
-            if (useCurve)
-                t = curve.Evaluate (t);
+            t = SampleCurve (t, ct);
 
             min = math.lerp (FromXY, ToXY, t);
             max = math.lerp (FromZW, ToZW, t);
         }
 
+        [MethodImpl (MethodImplOptions.AggressiveInlining)]
+        private float SampleCurve (float t, float ct)
+        {
+            if (!useCurve)
+                return t;
+
+            return ct > 0 ? curve.Evaluate (t) : 1 - curve.Evaluate (1 - t);
+        }
+
+        [MethodImpl (MethodImplOptions.AggressiveInlining)]
         private static float RemapClamped (float t, float a, float b, float c, float d)
         {
             t = math.remap (a, b, c, d, t);
             t = math.clamp (t, 0, 1);
             return t;
         }
+        
     }
 }

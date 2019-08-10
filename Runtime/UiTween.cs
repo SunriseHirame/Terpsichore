@@ -58,6 +58,8 @@ namespace Hirame.Terpsichore
 
             time += Time.deltaTime / length * animationDirection;
             time = math.clamp (time, 0, 1);
+
+            var ct = animationDirection;
             
             for (var i = 0; i < tweens.Length; i++)
             {
@@ -66,16 +68,16 @@ namespace Hirame.Terpsichore
                 switch (tween.Type)
                 {
                     case TweenType.Position:
-                        tween.ApplyAsPosition (time, ref position);
+                        tween.ApplyAsPosition (time, ct, ref position);
                         break;
                     case TweenType.Rotation:
-                        tween.ApplyAsRotation (time, ref rotation);
+                        tween.ApplyAsRotation (time, ct, ref rotation);
                         break;
                     case TweenType.Scale:
-                        tween.ApplyAsScale (time, ref scale);
+                        tween.ApplyAsScale (time, ct, ref scale);
                         break;
                     case TweenType.Color:
-                        tween.ApplyAsColor (time, ref color);
+                        tween.ApplyAsColor (time, ct, ref color);
                         break;
                     //case TweenType.Anchors:
                     //    tween.ApplyAsAnchors (time, ref anchorMin, ref anchorMax);

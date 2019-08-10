@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 namespace Hirame.Terpsichore.Editor
@@ -18,33 +19,35 @@ namespace Hirame.Terpsichore.Editor
         public override void OnGUI (Rect position, SerializedProperty property, GUIContent label)
         {
             SetupGUIContents ();
-            
+
             if (!curveFetched)
                 FindCurveAssets (property);
-            
-            using (var scope = new EditorGUI.ChangeCheckScope ())
+            else
+                UpdateCurveIndex (property);
+
+            var tweenTypeProp = property.FindPropertyRelative ("Type");
+
+            if (property.name.Equals ("data"))
             {
-                var tweenTypeProp = property.FindPropertyRelative ("Type");
-
-                var lineRect = position;
-                lineRect.height = EditorGUIUtility.singleLineHeight;
-            
-                EditorGUI.PropertyField (lineRect, property);
-
-                if (!property.isExpanded)
-                    return;
-            
-                lineRect.y += EditorGUIUtility.singleLineHeight;
-                EditorGUI.PropertyField (lineRect, tweenTypeProp);
-
-                DrawTypeFields (property, ref lineRect);
-                DrawCurveSelection (property, ref lineRect);
-
-                if (scope.changed)
-                    property.serializedObject.ApplyModifiedProperties ();
+                label.text = tweenTypeProp.enumDisplayNames[(int) math.sqrt (tweenTypeProp.enumValueIndex)];
             }
             
+
+            var lineRect = position;
+            lineRect.height = EditorGUIUtility.singleLineHeight;
             
+            EditorGUI.PropertyField (lineRect, property, label);
+
+            if (!property.isExpanded)
+                return;
+
+            lineRect.y += EditorGUIUtility.singleLineHeight * 1.5f;
+            
+            EditorGUI.PropertyField (lineRect, tweenTypeProp);
+
+            DrawTypeFields (property, ref lineRect);
+            DrawRange (property, ref lineRect);
+            DrawCurveSelection (property, ref lineRect);
         }
 
         private void DrawTypeFields (SerializedProperty property, ref Rect lineRect)
@@ -63,17 +66,17 @@ namespace Hirame.Terpsichore.Editor
                 case TweenType.Rotation:
                     goto case TweenType.Scale;
                 case TweenType.Scale:
-                    lineRect.y += EditorGUIUtility.singleLineHeight;
+                    lineRect.y += EditorGUIUtility.singleLineHeight + 2;
                     from = EditorGUI.Vector3Field (lineRect, fromGuiContent, from);
 
-                    lineRect.y += EditorGUIUtility.singleLineHeight;
+                    lineRect.y += EditorGUIUtility.singleLineHeight  + 2;
                     to = EditorGUI.Vector3Field (lineRect, toGuiContent, to);
                     break;
                 case TweenType.Color:
-                    lineRect.y += EditorGUIUtility.singleLineHeight;
+                    lineRect.y += EditorGUIUtility.singleLineHeight  + 2;
                     from = EditorGUI.ColorField (lineRect, fromGuiContent, from);
 
-                    lineRect.y += EditorGUIUtility.singleLineHeight;
+                    lineRect.y += EditorGUIUtility.singleLineHeight  + 2;
                     to = EditorGUI.ColorField (lineRect, toGuiContent, to);
                     break;
             }
@@ -82,43 +85,60 @@ namespace Hirame.Terpsichore.Editor
             toProp.vector4Value = to;
         }
 
+        private void DrawRange (SerializedProperty property, ref Rect lineRect)
+        {
+            var rangeProp = property.FindPropertyRelative ("Range");
+            
+            lineRect.y += EditorGUIUtility.singleLineHeight + 2;
+            EditorGUI.PropertyField (lineRect, rangeProp);
+        }
+        
         private void DrawCurveSelection (SerializedProperty property, ref Rect lineRect)
         {
             var curveToggleProp = property.FindPropertyRelative ("useCurve");
             var curveProp = property.FindPropertyRelative ("curve");
 
             curveToggleProp.boolValue = curveProp.objectReferenceValue != null;
-
             
-            lineRect.y += EditorGUIUtility.singleLineHeight;
-            lineRect.y += EditorGUIUtility.singleLineHeight;
-            
-            var ci = EditorGUI.Popup (lineRect, "Curve", curveIndex, assetNames);
+            lineRect.y += EditorGUIUtility.singleLineHeight * 1.5f;
 
+            var curveSelectRect = lineRect;
+            curveSelectRect.width -= 52;
+            
+            var newCurveIndex = EditorGUI.Popup (curveSelectRect, "Curve", curveIndex, assetNames);
+            if (newCurveIndex != curveIndex)
+            {
+                curveIndex = newCurveIndex;
+                curveProp.objectReferenceValue = tweenCurves[curveIndex];
+                return;
+            }
+
+            var buttonRect = lineRect;
+            buttonRect.x += lineRect.width - 50;
+            buttonRect.width = 50;
+            
+            if (GUI.Button (buttonRect, "Show"))
+            {
+                EditorGUIUtility.PingObject (curveProp.objectReferenceValue);
+            }
+            
             if (curveToggleProp.boolValue)
             {
                 var curveCurve = new SerializedObject (curveProp.objectReferenceValue).FindProperty ("curve");
                 lineRect.y += EditorGUIUtility.singleLineHeight;
                 EditorGUI.CurveField (lineRect, curveCurve.animationCurveValue);
             }
-            
-            if (ci == curveIndex)
-                return;
-
-            curveIndex = ci;
-            curveProp.objectReferenceValue = tweenCurves[curveIndex];
-            property.serializedObject.ApplyModifiedProperties ();
         }
+        
 
         private void FindCurveAssets (SerializedProperty property)
         {
             curveIndex = -1;
             
-            var curveProp = property.FindPropertyRelative ("curve");
             var assets = AssetDatabase.FindAssets ("t:tweenCurve");
-
+            var curveProp = property.FindPropertyRelative ("curve");
             var curveAssetId = curveProp.objectReferenceValue;
-            
+
             assetNames = new string[assets.Length + 1];
             assetNames[0] = "None";
             
@@ -133,7 +153,22 @@ namespace Hirame.Terpsichore.Editor
                     curveIndex = i;
             }
 
+            if (curveIndex == -1)
+                curveIndex = 0;
+            
             curveFetched = true;
+        }
+
+        private void UpdateCurveIndex (SerializedProperty property)
+        {
+            var curveProp = property.FindPropertyRelative ("curve");
+            var curveAssetId = curveProp.objectReferenceValue;
+
+            for (var i = 1; i < assetNames.Length; i++)
+            {
+                if (curveAssetId == tweenCurves[i])
+                    curveIndex = i;
+            }
         }
 
         private static void SetupGUIContents ()
@@ -147,8 +182,9 @@ namespace Hirame.Terpsichore.Editor
 
         public override float GetPropertyHeight (SerializedProperty property, GUIContent label)
         {
-            return property.isExpanded ? 128 : 16;
+            return (property.isExpanded ? 7.5f : 1) * 18;
         }
+        
     }
 
 }

@@ -96,7 +96,7 @@ namespace Hirame.Terpsichore
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
         private float SampleCurve (float t, float ct)
         {
-            if (!useCurve)
+            if (!useCurve || curve == false)
                 return t;
 
             return ct > 0 ? curve.Evaluate (t) : 1 - curve.Evaluate (1 - t);

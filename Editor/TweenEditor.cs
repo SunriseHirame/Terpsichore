@@ -1,26 +1,39 @@
-﻿using Unity.Mathematics;
+﻿using System;
+using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
 namespace Hirame.Terpsichore.Editor
 {
     [CustomEditor (typeof (Tween))]
-    public class TweenEditor : UnityEditor.Editor
+    public class TweenEditor : TweenEditorBase<Tween, TweenType>
     {
-        private static string[] tweenTypeNames = { "Position", "Rotation", "Scale", "Color" };
+    }
+    
+    [CustomEditor (typeof (UiTween))]
+    public class UiTweenEditor : TweenEditorBase<UiTween, UiTweenType>
+    {
+    }
+
+    public class TweenEditorBase<T1, T2> : UnityEditor.Editor 
+        where T1 : MonoBehaviour, ITween 
+        where T2 : Enum
+    {
+        protected string[] tweenTypeNames = Enum.GetNames (typeof (T2));
 
         private float previewValue;
 
-        private Tween tween;
+        private T1 tween;
 
-        private void OnEnable ()
+        protected void OnEnable ()
         {
-            tween = target as Tween;
+            tween = target as T1;
+            tweenTypeNames = Enum.GetNames (typeof (T2));
         }
 
         public override void OnInspectorGUI ()
         {
-            if (tween == false)
+            if (tween == null)
             {
                 OnEnable ();
                 return;
@@ -51,7 +64,7 @@ namespace Hirame.Terpsichore.Editor
 
                 using (new GUILayout.VerticalScope (GUI.skin.box))
                 {
-                    DrawTweens ();
+                    DrawTeenNodes ();
                 }
 
                 if (scope.changed)
@@ -59,7 +72,7 @@ namespace Hirame.Terpsichore.Editor
             }
         }
 
-        private void DrawTweens ()
+        private void DrawTeenNodes ()
         {
             var tweensProp = serializedObject.FindProperty ("tweens");
 

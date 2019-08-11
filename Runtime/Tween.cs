@@ -7,7 +7,7 @@ using UnityEngine.Events;
 
 namespace Hirame.Terpsichore
 {
-    public sealed class Tween : MonoBehaviour
+    public sealed class Tween : MonoBehaviour, ITween
     {
         [SerializeField] private float length = 1f;
 
@@ -27,10 +27,15 @@ namespace Hirame.Terpsichore
         public void Play ()
         {
             enabled = true;
-            time = 0;
         }
 
         public void Stop ()
+        {
+            enabled = false;
+            time = 0;
+        }
+
+        public void Pause ()
         {
             enabled = false;
         }
@@ -81,7 +86,7 @@ namespace Hirame.Terpsichore
             var scale = float3.zero;
 
             var color = Color.white;
-            var mask = (TweenType) 0;
+            var mask = (FullTweenType) 0;
 
             var ct = animationDirection;
             
@@ -91,20 +96,20 @@ namespace Hirame.Terpsichore
                 
                 switch (tween.Type)
                 {
-                    case TweenType.Position:
-                        mask |= TweenType.Position;
+                    case FullTweenType.Position:
+                        mask |= FullTweenType.Position;
                         tween.ApplyAsPosition (t, ct, ref position);
                         break;
-                    case TweenType.Rotation:
-                        mask |= TweenType.Rotation;
+                    case FullTweenType.Rotation:
+                        mask |= FullTweenType.Rotation;
                         tween.ApplyAsRotation (t, ct, ref rotation);
                         break;
-                    case TweenType.Scale:
-                        mask |= TweenType.Scale;
+                    case FullTweenType.Scale:
+                        mask |= FullTweenType.Scale;
                         tween.ApplyAsScale (t, ct, ref scale);
                         break;
-                    case TweenType.Color:
-                        mask |= TweenType.Color;
+                    case FullTweenType.Color:
+                        mask |= FullTweenType.Color;
                         tween.ApplyAsColor (t, ct, ref color);
                         break;
                     default:
@@ -112,13 +117,13 @@ namespace Hirame.Terpsichore
                 }
             }
 
-            if ((mask & TweenType.Position) == TweenType.Position)
+            if ((mask & FullTweenType.Position) == FullTweenType.Position)
                 attachedTransform.localPosition = position;
 
-            if ((mask & TweenType.Rotation) == TweenType.Rotation)
+            if ((mask & FullTweenType.Rotation) == FullTweenType.Rotation)
                 attachedTransform.localRotation = Quaternion.Euler (rotation);
 
-            if ((mask & TweenType.Scale) == TweenType.Scale)
+            if ((mask & FullTweenType.Scale) == FullTweenType.Scale)
                 attachedTransform.localScale = scale;
         }
 

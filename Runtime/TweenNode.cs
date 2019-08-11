@@ -9,7 +9,7 @@ namespace Hirame.Terpsichore
     [System.Serializable, StructLayout (LayoutKind.Explicit)]
     public struct TweenNode
     {
-        [FieldOffset (0)] public TweenType Type;
+        [FieldOffset (0)] public FullTweenType Type;
 
         // Base serialized
         [FieldOffset (sizeof (int))] public Vector4 FromXYZW;

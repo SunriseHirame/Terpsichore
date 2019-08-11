@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Hirame.Terpsichore
 {
@@ -13,6 +14,16 @@ namespace Hirame.Terpsichore
 
     [System.Flags]
     public enum UiTweenType
+    {
+        Position = 1,
+        Rotation = 2,
+        Scale = 4,
+        Color = 8,
+        Anchors = 16
+    }
+
+    [System.Flags]
+    public enum FullTweenType
     {
         Position = 1,
         Rotation = 2,
@@ -43,6 +54,7 @@ namespace Hirame.Terpsichore
         {
             return self.HasFlagNonAlloc (TweenPlayFlags.PingPong);
         }
+        
         
         [MethodImpl (MethodImplOptions.AggressiveInlining)]
         public static bool FlagLoop (this TweenPlayFlags self)

@@ -7,26 +7,30 @@ using UnityEngine.Events;
 
 namespace Hirame.Terpsichore
 {
-    public sealed class Tween : MonoBehaviour, ITween
+    public class UiTweener : MonoBehaviour, ITweener
     {
         [SerializeField] private float length = 1f;
 
-        [MaskField] [SerializeField] private TweenPlayFlags playFlags = TweenPlayFlags.PlayOnEnable;
+        [MaskField] 
+        [SerializeField] private TweenPlayFlags playPlayFlags = TweenPlayFlags.PlayOnEnable;
 
         [SerializeField] private TweenNode[] tweens;
 
         [SerializeField] private UnityEvent tweenFinished;
 
-        private Transform attachedTransform;
+        private RectTransform attachedTransform;
 
         private int animationDirection = 1;
         private float time;
 
-        private TweenType tweenTypeMask;
-
+        public bool IsRunning { get; private set; }
+        
         public void Play ()
         {
             enabled = true;
+            IsRunning = true;
+            print (TweenRunner.Instance);
+            TweenRunner.Instance.AddTweener (this);
         }
 
         public void Stop ()
@@ -37,15 +41,11 @@ namespace Hirame.Terpsichore
 
         public void Pause ()
         {
-            enabled = false;
+            IsRunning = false;
         }
 
         public void SetTime (float t)
         {
-#if UNITY_EDITOR
-            if (!attachedTransform)
-                attachedTransform = GetComponent<Transform> ();
-#endif
             time = t;
             Internal_UpdateTweens (t);
         }
@@ -53,15 +53,20 @@ namespace Hirame.Terpsichore
         private void OnEnable ()
         {
             if (attachedTransform == false)
-                attachedTransform = GetComponent<Transform> ();
+                attachedTransform = GetComponent<RectTransform> ();
 
-            if (playFlags.FlagPlayOnEnable ())
+            if (playPlayFlags.FlagPlayOnEnable ())
                 Play ();
             else
                 enabled = false;
         }
 
-        private void Update ()
+        private void OnDisable ()
+        {
+            IsRunning = false;
+        }
+
+        public void OnUpdateTween ()
         {
             time += Time.deltaTime / length * animationDirection;
             time = math.clamp (time, 0, 1);
@@ -83,66 +88,70 @@ namespace Hirame.Terpsichore
         {
             var position = float3.zero;
             var rotation = float3.zero;
-            var scale = float3.zero;
-
+            var scale = new float3 (1, 1, 1);
             var color = Color.white;
-            var mask = (FullTweenType) 0;
+
+            var anchorMin = float2.zero;
+            var anchorMax = float2.zero;
 
             var ct = animationDirection;
-            
+
             for (var i = 0; i < tweens.Length; i++)
             {
                 ref var tween = ref tweens[i];
-                
+
                 switch (tween.Type)
                 {
                     case FullTweenType.Position:
-                        mask |= FullTweenType.Position;
                         tween.ApplyAsPosition (t, ct, ref position);
                         break;
                     case FullTweenType.Rotation:
-                        mask |= FullTweenType.Rotation;
                         tween.ApplyAsRotation (t, ct, ref rotation);
                         break;
                     case FullTweenType.Scale:
-                        mask |= FullTweenType.Scale;
                         tween.ApplyAsScale (t, ct, ref scale);
                         break;
                     case FullTweenType.Color:
-                        mask |= FullTweenType.Color;
                         tween.ApplyAsColor (t, ct, ref color);
+                        break;
+                    case FullTweenType.Anchors:
+                        tween.ApplyAsAnchors (t, ct, ref anchorMin, ref anchorMax);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException ();
                 }
             }
 
-            if ((mask & FullTweenType.Position) == FullTweenType.Position)
-                attachedTransform.localPosition = position;
+            attachedTransform.localPosition = position;
+            attachedTransform.localRotation = Quaternion.Euler (rotation);
+            attachedTransform.localScale = scale;
 
-            if ((mask & FullTweenType.Rotation) == FullTweenType.Rotation)
-                attachedTransform.localRotation = Quaternion.Euler (rotation);
-
-            if ((mask & FullTweenType.Scale) == FullTweenType.Scale)
-                attachedTransform.localScale = scale;
+            attachedTransform.anchorMin = anchorMin;
+            attachedTransform.anchorMax = anchorMax;
         }
 
         private bool CheckFinish ()
         {
-            if (playFlags.FlagPingPong ())
+            if (playPlayFlags.FlagPingPong ())
             {
                 // Switch the animation direction
                 animationDirection *= -1;
                 return false;
             }
 
-            if (playFlags.FlagLoop ())
+            if (playPlayFlags.FlagLoop ())
             {
                 time = 0;
                 return false;
             }
 
             return true;
+        }
+
+        private void OnValidate ()
+        {
+            if (attachedTransform == false)
+                attachedTransform = GetComponent<RectTransform> ();
         }
     }
 }

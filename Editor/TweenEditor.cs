@@ -5,30 +5,30 @@ using UnityEngine;
 
 namespace Hirame.Terpsichore.Editor
 {
-    [CustomEditor (typeof (Tween))]
-    public class TweenEditor : TweenEditorBase<Tween, TweenType>
+    [CustomEditor (typeof (Tweener))]
+    public class TweenEditor : TweenEditorBase<Tweener, TweenType>
     {
     }
     
-    [CustomEditor (typeof (UiTween))]
-    public class UiTweenEditor : TweenEditorBase<UiTween, UiTweenType>
+    [CustomEditor (typeof (UiTweener))]
+    public class UiTweenEditor : TweenEditorBase<UiTweener, UiTweenType>
     {
     }
 
-    public class TweenEditorBase<T1, T2> : UnityEditor.Editor 
-        where T1 : MonoBehaviour, ITween 
-        where T2 : Enum
+    public class TweenEditorBase<TTweenType, TTweenFlagType> : UnityEditor.Editor 
+        where TTweenType : MonoBehaviour, ITweener 
+        where TTweenFlagType : Enum
     {
-        protected string[] tweenTypeNames = Enum.GetNames (typeof (T2));
+        protected string[] tweenTypeNames = Enum.GetNames (typeof (TTweenFlagType));
 
         private float previewValue;
 
-        private T1 tween;
+        private TTweenType tween;
 
         protected void OnEnable ()
         {
-            tween = target as T1;
-            tweenTypeNames = Enum.GetNames (typeof (T2));
+            tween = target as TTweenType;
+            tweenTypeNames = Enum.GetNames (typeof (TTweenFlagType));
         }
 
         public override void OnInspectorGUI ()

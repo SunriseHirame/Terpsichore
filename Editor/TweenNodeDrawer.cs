@@ -10,28 +10,21 @@ namespace Hirame.Terpsichore.Editor
         private static GUIContent fromGuiContent;
         private static GUIContent toGuiContent;
 
-        private static string[] assetNames;
-        private static TweenCurve[] tweenCurves;
-
-        private bool curveFetched;
         private int curveIndex;
 
         public override void OnGUI (Rect position, SerializedProperty property, GUIContent label)
         {
             SetupGUIContents ();
 
-            if (!curveFetched)
-                FindCurveAssets (property);
-            else
-                UpdateCurveIndex (property);
-
             var tweenTypeProp = property.FindPropertyRelative ("Type");
 
             if (property.name.Equals ("data"))
             {
-                label.text = tweenTypeProp.enumDisplayNames[(int) math.sqrt (tweenTypeProp.enumValueIndex)];
+                var enumIndex = (int) math.sqrt (tweenTypeProp.enumValueIndex);
+                label.text = enumIndex >= 0 && enumIndex < tweenTypeProp.enumDisplayNames.Length 
+                    ? tweenTypeProp.enumDisplayNames[enumIndex]
+                    : "None";
             }
-
 
             var lineRect = position;
             lineRect.height = EditorGUIUtility.singleLineHeight;
@@ -47,7 +40,9 @@ namespace Hirame.Terpsichore.Editor
 
             DrawTypeFields (property, ref lineRect);
             DrawRange (property, ref lineRect);
-            DrawCurveSelection (property, ref lineRect);
+            
+            curveIndex = TweenCurveDrawer.GetCurveIndex (property);
+            TweenCurveDrawer.DrawCurveSelection (property, curveIndex, ref lineRect);
         }
 
         private void DrawTypeFields (SerializedProperty property, ref Rect lineRect)
@@ -123,84 +118,7 @@ namespace Hirame.Terpsichore.Editor
             EditorGUI.PropertyField (lineRect, rangeProp);
         }
 
-        private void DrawCurveSelection (SerializedProperty property, ref Rect lineRect)
-        {
-            var curveToggleProp = property.FindPropertyRelative ("useCurve");
-            var curveProp = property.FindPropertyRelative ("curve");
-
-            curveToggleProp.boolValue = curveProp.objectReferenceValue != null;
-
-            lineRect.y += EditorGUIUtility.singleLineHeight * 1.5f;
-
-            var curveSelectRect = lineRect;
-            curveSelectRect.width -= 52;
-
-            var newCurveIndex = EditorGUI.Popup (curveSelectRect, "Curve", curveIndex, assetNames);
-            if (newCurveIndex != curveIndex)
-            {
-                curveIndex = newCurveIndex;
-                curveProp.objectReferenceValue = tweenCurves[curveIndex];
-                return;
-            }
-
-            var buttonRect = lineRect;
-            buttonRect.x += lineRect.width - 50;
-            buttonRect.width = 50;
-
-            if (GUI.Button (buttonRect, "Show"))
-            {
-                EditorGUIUtility.PingObject (curveProp.objectReferenceValue);
-            }
-
-            if (curveToggleProp.boolValue)
-            {
-                var curveCurve = new SerializedObject (curveProp.objectReferenceValue).FindProperty ("curve");
-                lineRect.y += EditorGUIUtility.singleLineHeight;
-                EditorGUI.CurveField (lineRect, curveCurve.animationCurveValue);
-            }
-        }
-
-
-        private void FindCurveAssets (SerializedProperty property)
-        {
-            curveIndex = -1;
-
-            var assets = AssetDatabase.FindAssets ("t:tweenCurve");
-            var curveProp = property.FindPropertyRelative ("curve");
-            var curveAssetId = curveProp.objectReferenceValue;
-
-            assetNames = new string[assets.Length + 1];
-            assetNames[0] = "None";
-
-            tweenCurves = new TweenCurve[assets.Length + 1];
-
-            for (var i = 1; i < assetNames.Length; i++)
-            {
-                tweenCurves[i] =
-                    AssetDatabase.LoadAssetAtPath<TweenCurve> (AssetDatabase.GUIDToAssetPath (assets[i - 1]));
-                assetNames[i] = tweenCurves[i].name;
-
-                if (curveIndex == -1 && curveAssetId == tweenCurves[i])
-                    curveIndex = i;
-            }
-
-            if (curveIndex == -1)
-                curveIndex = 0;
-
-            curveFetched = true;
-        }
-
-        private void UpdateCurveIndex (SerializedProperty property)
-        {
-            var curveProp = property.FindPropertyRelative ("curve");
-            var curveAssetId = curveProp.objectReferenceValue;
-
-            for (var i = 1; i < assetNames.Length; i++)
-            {
-                if (curveAssetId == tweenCurves[i])
-                    curveIndex = i;
-            }
-        }
+        
 
         private static void SetupGUIContents ()
         {

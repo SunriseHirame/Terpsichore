@@ -60,8 +60,7 @@ namespace Hirame.Terpsichore.Editor
                 {
                     DrawPropertiesExcluding (serializedObject, "m_Script", "tweens", "tweenFinished");
                 }
-
-
+                
                 using (new GUILayout.VerticalScope (GUI.skin.box))
                 {
                     DrawTeenNodes ();
@@ -101,7 +100,6 @@ namespace Hirame.Terpsichore.Editor
                     EditorGUILayout.PropertyField (tweensProp.GetArrayElementAtIndex (i), true);
                 }
             }
-
         }
 
         private void AddTweenNode (SerializedProperty tweensProp, int type)

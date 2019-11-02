@@ -9,10 +9,14 @@ namespace Hirame.Terpsichore
 {
     public sealed class Tweener : MonoBehaviour, ITweener
     {
+        [SerializeField] private TweenPreset preset;
+
+        [Space]
         [SerializeField] private float length = 1f;
-
-        [MaskField] [SerializeField] private TweenPlayFlags playFlags = TweenPlayFlags.PlayOnEnable;
-
+        
+        [MaskField]
+        [SerializeField] private TweenPlayFlags playFlags = TweenPlayFlags.PlayOnEnable;
+        
         [SerializeField] private TweenNode[] tweens;
 
         [SerializeField] private UnityEvent tweenFinished;
@@ -30,7 +34,7 @@ namespace Hirame.Terpsichore
         {
             enabled = true;
             IsRunning = true;
-            TweenRunner.Instance.AddTweener (this);
+            TweenRunner.GetOrCreate ().AddTweener (this);
         }
 
         public void Stop ()

@@ -29,8 +29,7 @@ namespace Hirame.Terpsichore
         {
             enabled = true;
             IsRunning = true;
-            print (TweenRunner.Instance);
-            TweenRunner.Instance.AddTweener (this);
+            TweenRunner.GetOrCreate ().AddTweener (this);
         }
 
         public void Stop ()
